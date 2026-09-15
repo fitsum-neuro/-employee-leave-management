@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Leave History - Leave Management{% endblock %}
+{% block content %}
+<h1>Leave History</h1>
+<div class="card">
+    <table id="history-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Days</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in requests %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.leave_type }}</td>
+                <td>{{ r.start_date }}</td>
+                <td>{{ r.end_date }}</td>
+                <td>{{ r.days_requested }}</td>
+                <td><span class="status status-{{ r.status|lower }}">{{ r.status }}</span></td>
+                <td>
+                    {% if r.status in ['Requested', 'Approved'] %}
+                    <form method="POST" action="{{ url_for('main.cancel_request', request_id=r.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" id="cancel-{{ r.id }}">Cancel</button>
+                    </form>
+                    {% else %}
+                    —
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7">No leave requests found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

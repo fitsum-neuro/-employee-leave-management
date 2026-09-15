@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Employee Leave Management{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Leave Manager</div>
+        {% if session.get('user_id') %}
+        <div class="nav-links">
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('main.request_leave') }}">Request Leave</a>
+            <a href="{{ url_for('main.leave_history') }}">History</a>
+            {% if session.get('user_role') == 'admin' %}
+            <a href="{{ url_for('main.admin_panel') }}">Admin</a>
+            {% endif %}
+            <span class="nav-user">{{ session.get('user_name') }}</span>
+            <a href="{{ url_for('main.logout') }}" class="btn-logout">Logout</a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

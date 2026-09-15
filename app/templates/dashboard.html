@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Leave Management{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p>Welcome, {{ session.get('user_name') }}!</p>
+
+<section class="card">
+    <h2>Leave Balances</h2>
+    <table id="balance-table">
+        <thead>
+            <tr>
+                <th>Leave Type</th>
+                <th>Total Days</th>
+                <th>Used Days</th>
+                <th>Remaining</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in balances %}
+            <tr>
+                <td>{{ b.leave_type }}</td>
+                <td>{{ b.total_days }}</td>
+                <td>{{ b.used_days }}</td>
+                <td>{{ b.remaining_days }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No balance records found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section class="card">
+    <h2>Recent Requests</h2>
+    <table id="recent-requests-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Dates</th>
+                <th>Days</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in recent_requests %}
+            <tr>
+                <td>{{ r.leave_type }}</td>
+                <td>{{ r.start_date }} to {{ r.end_date }}</td>
+                <td>{{ r.days_requested }}</td>
+                <td><span class="status status-{{ r.status|lower }}">{{ r.status }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">No recent requests.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('main.request_leave') }}" class="btn btn-primary">Request Leave</a>
+</section>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel - Leave Management{% endblock %}
+{% block content %}
+<h1>Admin Panel</h1>
+<div class="card">
+    <h2>Pending Leave Requests</h2>
+    <table id="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Employee</th>
+                <th>Type</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Days</th>
+                <th>Document</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in pending_requests %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.employee_name }}</td>
+                <td>{{ r.leave_type }}</td>
+                <td>{{ r.start_date }}</td>
+                <td>{{ r.end_date }}</td>
+                <td>{{ r.days_requested }}</td>
+                <td>{{ "Yes" if r.has_document else "No" }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('main.approve_request', request_id=r.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm" id="approve-{{ r.id }}">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('main.reject_request', request_id=r.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" id="reject-{{ r.id }}">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8">No pending requests.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
