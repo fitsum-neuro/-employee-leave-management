@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime, date
 
 
@@ -10,8 +11,14 @@ def calculate_service_months(hire_date_str):
 
     today = date.today()
     months = (today.year - hire_date.year) * 12 + (today.month - hire_date.month)
-    if today.day < hire_date.day:
+
+    # Account for short months: if hire day exceeds the last day of the
+    # current month, the anniversary falls on the last day of that month.
+    last_day_of_month = calendar.monthrange(today.year, today.month)[1]
+    anniversary_day = min(hire_date.day, last_day_of_month)
+    if today.day < anniversary_day:
         months -= 1
+
     return max(months, 0)
 
 
@@ -46,7 +53,11 @@ def check_eligibility(employee, leave_type, days_requested, has_document,
     if leave_type not in valid_types:
         return False, f"Invalid leave type. Must be one of: {', '.join(valid_types)}"
 
-    if not isinstance(days_requested, int) or days_requested < 1:
+    # Reject booleans explicitly — bool is a subclass of int in Python
+    if isinstance(days_requested, bool) or not isinstance(days_requested, int):
+        return False, "Days requested must be at least 1"
+
+    if days_requested < 1:
         return False, "Days requested must be at least 1"
 
     if days_requested > 30:

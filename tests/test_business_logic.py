@@ -160,6 +160,11 @@ class TestCheckEligibility:
         ok, msg = check_eligibility(eligible_employee, 'Annual', 2.5, False, balance_func)
         assert ok is False
 
+    def test_boolean_days_rejected(self, eligible_employee, balance_func):
+        ok, msg = check_eligibility(eligible_employee, 'Annual', True, False, balance_func)
+        assert ok is False
+        assert "at least 1" in msg
+
 
 # ==================== validate_leave_dates ====================
 

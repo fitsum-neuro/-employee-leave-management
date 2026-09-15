@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.auth import login_user, login_required, admin_required
 from app.models import Employee, LeaveRequest, LeaveBalance
-from app.business_logic import process_leave_request, validate_leave_dates
+from app.business_logic import process_leave_request, validate_leave_dates, calculate_leave_balance
 
 bp = Blueprint('main', __name__)
 
@@ -92,9 +92,12 @@ def cancel_request(request_id):
         flash('Unauthorized action.', 'danger')
         return redirect(url_for('main.leave_history'))
 
+    # Only restore balance if the request was previously Approved
+    was_approved = leave_req.status == 'Approved'
+
     success, msg = leave_req.update_status('Cancelled')
     if success:
-        if leave_req.status == 'Cancelled' and leave_req.days_requested:
+        if was_approved:
             LeaveBalance.restore(leave_req.employee_id, leave_req.leave_type,
                                  leave_req.days_requested)
         flash('Leave request cancelled.', 'success')
@@ -120,6 +123,12 @@ def approve_request(request_id):
         flash('Leave request not found.', 'danger')
         return redirect(url_for('main.admin_panel'))
 
+    # Re-check balance before approving
+    remaining = calculate_leave_balance(leave_req.employee_id, leave_req.leave_type)
+    if leave_req.days_requested > remaining:
+        flash(f'Insufficient balance. Employee has {remaining} days remaining.', 'danger')
+        return redirect(url_for('main.admin_panel'))
+
     success, msg = leave_req.update_status('Approved', session['user_id'])
     if success:
         LeaveBalance.deduct(leave_req.employee_id, leave_req.leave_type,
@@ -143,6 +152,24 @@ def reject_request(request_id):
     success, msg = leave_req.update_status('Rejected', session['user_id'])
     if success:
         flash('Leave request rejected.', 'info')
+    else:
+        flash(msg, 'danger')
+
+    return redirect(url_for('main.admin_panel'))
+
+
+@bp.route('/admin/mark-taken/<int:request_id>', methods=['POST'])
+@admin_required
+def mark_taken(request_id):
+    leave_req = LeaveRequest.get_by_id(request_id)
+
+    if not leave_req:
+        flash('Leave request not found.', 'danger')
+        return redirect(url_for('main.admin_panel'))
+
+    success, msg = leave_req.update_status('Taken', session['user_id'])
+    if success:
+        flash('Leave marked as taken.', 'success')
     else:
         flash(msg, 'danger')
 
