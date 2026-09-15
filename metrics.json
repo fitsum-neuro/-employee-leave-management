@@ -102,11 +102,21 @@
     "state_transition": 41
   },
   "automated_tests": {
-    "total": 152,
-    "passed": 147,
-    "failed": 5,
-    "pass_rate_percent": 96.71,
+    "total": 189,
+    "passed": 182,
+    "failed": 7,
+    "pass_rate_percent": 96.30,
     "failing_are_defect_probes": true,
-    "note": "The failing tests are the defect reproducers marked with the `defect` marker, one per logged defect. Run `pytest -m \"not defect\"` to exclude them."
+    "note": "Counts include 21 integration tests (INT-01..INT-04) and 16 Selenium system tests (SYS-01..SYS-05) added by Person 3 (Eyob Kassaye). Run `pytest -m 'not defect'` to exclude the 7 defect reproducers.",
+    "breakdown_by_suite": {
+      "unit_business_logic": 52,
+      "unit_routes": 15,
+      "decision_table": 22,
+      "state_transition": 41,
+      "integration": 21,
+      "system_selenium": 16,
+      "defect_probes_unit": 5,
+      "defect_probes_integration": 2
+    }
   }
 }
