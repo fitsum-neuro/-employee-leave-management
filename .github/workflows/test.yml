@@ -1,0 +1,188 @@
+name: CI — Employee Leave Management System
+
+# Runs on every push and pull request.
+# Authored by: Eyob Kassaye (ATE/4534/16) — Person 3, Test Automation Engineer & CI/CD
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  # ─────────────────────────────────────────────────────
+  # Job 1: Unit + Integration tests with coverage report
+  # ─────────────────────────────────────────────────────
+  unit-and-integration:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Run unit tests (excluding defect reproducers and system tests)
+        run: |
+          python -m pytest \
+            tests/test_business_logic.py \
+            tests/test_routes.py \
+            -m "not defect" \
+            -v \
+            --tb=short
+
+      - name: Run decision table tests
+        run: |
+          python -m pytest \
+            tests/test_decision_table.py \
+            -m "not defect" \
+            -v \
+            --tb=short
+
+      - name: Run state transition tests
+        run: |
+          python -m pytest \
+            tests/test_state_transitions.py \
+            -m "not defect" \
+            -v \
+            --tb=short
+
+      - name: Run integration tests
+        run: |
+          python -m pytest \
+            tests/test_integration.py \
+            -m "not defect" \
+            -v \
+            --tb=short
+
+      - name: Run ALL non-defect tests with coverage
+        run: |
+          python -m pytest \
+            -m "not defect and not system" \
+            --cov=app \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            -v
+
+      - name: Check minimum branch coverage on business_logic.py
+        run: |
+          python -m pytest \
+            --cov=app/business_logic \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-fail-under=80 \
+            -q
+
+      - name: Upload coverage report (HTML artifact)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-html
+          path: htmlcov/
+
+      - name: Upload coverage XML (for third-party analysis tools)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  # ─────────────────────────────────────────────────────
+  # Job 2: Defect reproducer probes (expected to FAIL)
+  # ─────────────────────────────────────────────────────
+  defect-probes:
+    name: Defect Reproducers (Expected Failures)
+    runs-on: ubuntu-latest
+    # This job is informational — it shows which defects are still open.
+    # We allow it to fail without blocking CI by using continue-on-error.
+    continue-on-error: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Run defect reproducers (failures expected — open defects)
+        run: |
+          python -m pytest \
+            -m defect \
+            -v \
+            --tb=short \
+            || echo "⚠️  Defect reproducers failed as expected. Fix the defects to make them pass."
+
+  # ─────────────────────────────────────────────────────
+  # Job 3: Selenium system tests (Chrome headless)
+  # ─────────────────────────────────────────────────────
+  system-tests:
+    name: Selenium System Tests
+    runs-on: ubuntu-latest
+    # System tests depend on a running server; start it as a background service.
+    needs: unit-and-integration
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies (including selenium)
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Install Chrome and ChromeDriver
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Start Flask application (background)
+        run: |
+          python run.py &
+          # Wait for the server to become ready
+          for i in $(seq 1 20); do
+            curl -s http://localhost:5000 > /dev/null && echo "Server ready after ${i}s" && break
+            sleep 1
+          done
+        env:
+          SECRET_KEY: ci-secret-key
+          FLASK_ENV: testing
+
+      - name: Run Selenium system tests
+        run: |
+          python -m pytest \
+            tests/selenium/test_leave_workflow.py \
+            -m "system and not defect" \
+            -v \
+            --tb=short
+        env:
+          SELENIUM_BASE_URL: "http://localhost:5000"
+          SELENIUM_DRIVER: chrome
+          SELENIUM_EMP_EMAIL: "john@company.com"
+          SELENIUM_EMP_PASS: "password123"
+          SELENIUM_ADM_EMAIL: "admin@company.com"
+          SELENIUM_ADM_PASS: "admin123"
