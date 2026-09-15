@@ -353,6 +353,54 @@ class TestTransitionsThroughRoutes:
                 sample_employee.id, 'Annual'
             ).used_days == 0
 
+    def test_st_r08b_rejecting_a_non_pending_request_is_refused_by_the_route(
+        self, app, sample_employee, sample_admin, sample_balance
+    ):
+        """
+        ST-R08: the reject route must surface the state machine's refusal rather
+        than silently doing nothing. Approved -> Rejected is forbidden.
+        """
+        with app.app_context():
+            request_id = make_request_in_state(
+                sample_employee.id, 'Approved'
+            ).id
+
+        admin = login(app, 'admin@company.com', 'admin123')
+        response = admin.post(
+            f'/admin/reject/{request_id}', follow_redirects=True
+        )
+
+        assert b'Cannot transition from Approved to Rejected' in response.data
+        with app.app_context():
+            assert LeaveRequest.get_by_id(request_id).status == 'Approved'
+
+    def test_st_r03b_cancelling_a_terminal_request_is_refused_by_the_route(
+        self, app, sample_employee, sample_balance
+    ):
+        """
+        ST-R03: the cancel route must refuse a request that is already in a
+        terminal state, and must not touch the balance when it does.
+        """
+        with app.app_context():
+            request_id = make_request_in_state(
+                sample_employee.id, 'Rejected'
+            ).id
+            used_before = LeaveBalance.get_balance(
+                sample_employee.id, 'Annual'
+            ).used_days
+
+        employee = login(app, 'test@company.com', 'password123')
+        response = employee.post(
+            f'/cancel/{request_id}', follow_redirects=True
+        )
+
+        assert b'Cannot transition from Rejected to Cancelled' in response.data
+        with app.app_context():
+            assert LeaveRequest.get_by_id(request_id).status == 'Rejected'
+            assert LeaveBalance.get_balance(
+                sample_employee.id, 'Annual'
+            ).used_days == used_before
+
     def test_st_r09_an_employee_cannot_cancel_another_employees_request(
         self, app, sample_employee, sample_balance
     ):

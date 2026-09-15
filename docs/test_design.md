@@ -465,11 +465,13 @@ keeps the balance consistent along each path.
 | ST-R01 | S1 → S2 via HTTP | Approval through the admin route persists the new state | PRE-A–D; a `Requested` request for 5 Annual days | 1. Log in as the administrator. 2. `POST /admin/approve/<id>`. 3. Re-read the request. | Redirect to `/admin`; the status is `Approved`; `reviewed_by` is the admin's id |
 | ST-R02 | S1 → S3 via HTTP | Rejection through the admin route persists the new state | as above | `POST /admin/reject/<id>` | Status is `Rejected`; the balance is untouched (`used_days` still 0) |
 | ST-R03 | S1 → S4 via HTTP | Cancellation through the employee route persists the new state | as above | Log in as the owning employee; `POST /cancel/<id>` | Status is `Cancelled` |
+| ST-R03b | Invalid path via HTTP | The cancel route refuses a request already in a terminal state | A request already in `Rejected`; Annual 20/0 | `POST /cancel/<id>` as the owning employee | "Cannot transition from Rejected to Cancelled" is flashed; the status stays `Rejected`; `used_days` is unchanged |
 | ST-R04 | Balance on approval | Approving deducts exactly the requested days | PRE-A–D; a `Requested` request for 5 Annual days; Annual 20/0 | Approve via the admin route, then read `leave_balance` | `used_days = 5`, `remaining_days = 15` |
 | ST-R05 | Balance on reject | Rejecting changes no balance | as ST-R04 | Reject via the admin route, then read `leave_balance` | `used_days = 0`, `remaining_days = 20` |
 | ST-R06 | Full path S1→S2→S4 | Cancelling an approved leave returns the deducted days exactly once | as ST-R04 | 1. Approve (used becomes 5). 2. Log in as the employee. 3. `POST /cancel/<id>`. 4. Read the balance. | Status is `Cancelled`; `used_days` is back to 0 and `remaining_days` back to 20 — restored once, not twice |
 | ST-R07 | Invalid path via HTTP | An approved request cannot be approved a second time through the route | A request already in `Approved`; Annual `used_days = 5` | `POST /admin/approve/<id>` again; read the balance | The transition is refused, a danger flash is shown, the status stays `Approved`, and `used_days` stays 5 — **not** 10 |
 | ST-R08 | Invalid path via HTTP | A rejected request cannot then be approved through the route | A request already in `Rejected` | `POST /admin/approve/<id>` | Refused; the status stays `Rejected`; no balance change |
+| ST-R08b | Invalid path via HTTP | The reject route surfaces the refusal for a non-pending request | A request already in `Approved` | `POST /admin/reject/<id>` | "Cannot transition from Approved to Rejected" is flashed; the status stays `Approved` |
 | ST-R09 | Authorisation | An employee cannot cancel another employee's request | Two employees; a `Requested` request owned by the first | Log in as the second employee; `POST /cancel/<first employee's request id>` | "Unauthorized action." is flashed; the status stays `Requested` |
 | ST-R10 | Missing entity | Acting on a non-existent request is handled, not crashed | PRE-A–D | `POST /cancel/99999` as an employee and `POST /admin/approve/99999` as the administrator | Both redirect with "Leave request not found."; no exception (HTTP 500) is raised |
 | ST-R11 | Guard | `can_transition_to` agrees with `update_status` for all 25 pairs | PRE-A–D | For every ordered pair, compare `can_transition_to(to)` with the success flag from `update_status(to)` | They agree for all 25 pairs — the guard is not bypassable |
@@ -477,7 +479,7 @@ keeps the balance consistent along each path.
 | ST-R13 | **Defect probe — DEF-002** | Approval must re-check the balance so that pending requests cannot be over-approved | Employee with Annual 20/0 and two separate 20-day `Requested` requests | 1. Approve both through the admin route. 2. Read `leave_balance`. | *Specified:* the second approval is refused; `used_days ≤ 20`. *Observed:* both approved, `used_days = 40`, `remaining_days = -20` — **fails**, see DEF-002 |
 | ST-R14 | **Defect probe — DEF-005** | The `Taken` state must be reachable from the running application | PRE-A–D; a request in `Approved` | Search `app/` for any caller that sets the status to `Taken`; drive the application and attempt to reach `Taken` | *Specified:* some route, admin action or scheduled job moves an elapsed approved leave to `Taken`. *Observed:* no caller exists — **fails**, see DEF-005 |
 
-**Coverage.** 25 of 25 ordered state pairs (5 valid, 20 invalid), plus 14 route-level and
+**Coverage.** 25 of 25 ordered state pairs (5 valid, 20 invalid), plus 16 route-level and
 path cases, of which 3 are defect probes.
 
 ---
@@ -492,9 +494,11 @@ path cases, of which 3 are defect probes.
 | BR-4 sufficient balance | EP, BVA, Decision table | EP-16–18, BVA-16–19, DT-09, DT-10, DT-21 |
 | BR-5 sick-leave document | EP, BVA, Decision table | EP-19–21, BVA-12–15, DT-11, DT-12, DT-16–18 |
 | BR-6 date validity | EP, BVA | EP-22–26, BVA-20–25 |
-| BR-7 state transitions | State transition | ST-V01–V05, ST-I01–I20, ST-R01–R03, ST-R07, ST-R08, ST-R11, ST-R14 |
+| BR-7 state transitions | State transition | ST-V01–V05, ST-I01–I20, ST-R01–R03, ST-R03b, ST-R07, ST-R08, ST-R08b, ST-R11, ST-R14 |
 | BR-8 balance on approve/cancel | State transition | ST-R04–R06, ST-R12, ST-R13 |
 
 **Totals.** 26 equivalence partitioning cases, 27 boundary value cases, 22 decision table
-cases, 39 state transition cases — **114 designed cases**, of which 5 are defect probes
-that are expected to fail against the current build.
+cases, 41 state transition cases — **116 designed cases**, of which 5 are defect probes
+that are expected to fail against the current build. The designed cases are realised as 152
+automated pytest tests, because several cases are parameterised over more than one
+representative value.

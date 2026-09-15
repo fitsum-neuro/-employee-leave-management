@@ -41,7 +41,7 @@ DESIGNED_CASES = {
     'equivalence_partitioning': 26,
     'boundary_value_analysis': 27,
     'decision_table': 22,
-    'state_transition': 39,
+    'state_transition': 41,
 }
 
 
