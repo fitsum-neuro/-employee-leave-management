@@ -1,0 +1,112 @@
+{
+  "project": "Employee Leave Management System",
+  "measured_on": "2026-09-15",
+  "measured_by": "Henok Zemedkun (ATE/8552/16) - Person 2, Test Architect",
+  "generated_by": "tools/collect_metrics.py",
+  "defect_density": 10.0,
+  "defect_removal_efficiency": 100.0,
+  "defects_found": 5,
+  "defects_escaped": 0,
+  "coverage_percentage": 97.44,
+  "defect_density_detail": {
+    "value": 10.0,
+    "unit": "defects per 1000 lines of application code",
+    "formula": "defects_found / (source_lines_of_code / 1000)",
+    "defects_found": 5,
+    "source_lines_of_code": 500,
+    "loc_basis": "non-blank, non-comment Python lines under app/",
+    "lines_per_file": {
+      "app/__init__.py": 70,
+      "app/auth.py": 33,
+      "app/business_logic.py": 91,
+      "app/models.py": 194,
+      "app/routes.py": 112
+    }
+  },
+  "defect_removal_efficiency_detail": {
+    "value": 100.0,
+    "unit": "percent",
+    "formula": "100 * defects_found_before_release / (defects_found_before_release + defects_escaped_to_users)",
+    "basis": "All five defects were found by testing before any release, and none has reached a user because the system has not been released. DRE must be re-measured after UAT and after release; the figure below is the pre-release value only.",
+    "by_phase": {
+      "unit_testing": {
+        "defects_found": 0,
+        "defects_escaped_to_later_phases": 5,
+        "removal_efficiency_percent": 0.0,
+        "note": "The 52 unit tests that existed before this test design passed against all five defects. Phase DRE of 0% is the most important number in this file: it shows unit tests alone did not exercise the rule combinations and state paths where the defects live."
+      },
+      "integration_testing": {
+        "defects_found": 5,
+        "defects_escaped_to_later_phases": 0,
+        "removal_efficiency_percent": 100.0,
+        "note": "Decision table and state transition testing found all five: DEF-003 and DEF-004 from the decision table, DEF-001, DEF-002 and DEF-005 from state transitions."
+      },
+      "system_testing": {
+        "defects_found": 0,
+        "defects_escaped_to_later_phases": 0,
+        "removal_efficiency_percent": null
+      },
+      "uat": {
+        "defects_found": 0,
+        "defects_escaped_to_later_phases": 0,
+        "removal_efficiency_percent": null
+      }
+    }
+  },
+  "coverage_detail": {
+    "statement_coverage_percent": 97.44,
+    "branch_coverage_percent": 92.31,
+    "statements_total": 352,
+    "statements_covered": 347,
+    "branches_total": 78,
+    "branches_covered": 72,
+    "partial_branches": 6,
+    "core_module": {
+      "file": "app/business_logic.py",
+      "statement_coverage_percent": 100.0,
+      "branch_coverage_percent": 100.0,
+      "target_percent": 80.0,
+      "meets_target": true
+    },
+    "per_file": {
+      "app/__init__.py": 97.06,
+      "app/auth.py": 92.5,
+      "app/business_logic.py": 100.0,
+      "app/models.py": 98.55,
+      "app/routes.py": 96.12
+    }
+  },
+  "defects_by_severity": {
+    "Critical": 2,
+    "Low": 1,
+    "Medium": 2
+  },
+  "defects_by_priority": {
+    "High": 2,
+    "Low": 1,
+    "Medium": 2
+  },
+  "defects_by_status": {
+    "Open": 5
+  },
+  "defects_by_module": {
+    "app/routes.py": 2,
+    "app/business_logic.py": 2,
+    "app/models.py": 1
+  },
+  "test_cases_designed": 114,
+  "test_cases_designed_by_technique": {
+    "equivalence_partitioning": 26,
+    "boundary_value_analysis": 27,
+    "decision_table": 22,
+    "state_transition": 39
+  },
+  "automated_tests": {
+    "total": 150,
+    "passed": 145,
+    "failed": 5,
+    "pass_rate_percent": 96.67,
+    "failing_are_defect_probes": true,
+    "note": "The failing tests are the defect reproducers marked with the `defect` marker, one per logged defect. Run `pytest -m \"not defect\"` to exclude them."
+  }
+}
