@@ -57,7 +57,7 @@ def check_eligibility(employee, leave_type, days_requested, has_document,
     if isinstance(days_requested, bool) or not isinstance(days_requested, int):
         return False, "Days requested must be at least 1"
 
-    if days_requested < 1:
+    if days_requested < 0:  # BUG: should be < 1; allows 0-day requests through
         return False, "Days requested must be at least 1"
 
     if days_requested > 30:
