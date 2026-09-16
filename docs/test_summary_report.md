@@ -184,7 +184,27 @@ product is close. It is not ready.
 fine to show and the defect reproducers are part of what is worth showing. That is a demo
 decision, not a release decision, and it does not change the no-go above.
 
-## 9. Conclusion
+## 9. CI/CD Regression Demonstration
+
+As part of the continuous integration setup (GitHub Actions), a regression demonstration was performed to prove that the pipeline reliably catches newly introduced bugs and guards the `main` branch.
+
+**1. Introducing the Bug**
+A deliberate boundary bug was introduced in `app/business_logic.py` inside the `check_eligibility` function by changing `if days_requested < 1:` to `if days_requested < 0:`. This off-by-one error incorrectly allowed 0-day leave requests to bypass the minimum validation rule.
+
+**2. CI Pipeline Failure**
+Upon pushing this change, the GitHub Actions pipeline immediately triggered and failed. The unit tests guarding the lower boundary (`TestCheckEligibility::test_days_less_than_one` and `TestRule2DaysBelowMinimum::test_dt_03_day_count_below_minimum_is_refused[0]`) caught the regression, and the pipeline turned red, preventing the broken code from merging.
+
+*[Insert screenshot of the FAILED GitHub Actions run here]*
+
+**3. Fixing the Bug**
+The commit was reverted, restoring the correct `if days_requested < 1:` check. 
+
+**4. CI Pipeline Recovery**
+Upon pushing the fix, the GitHub Actions pipeline triggered again. The boundary tests passed successfully, branch coverage requirements were met, the Selenium system tests executed headlessly against a spun-up local server, and the pipeline turned green.
+
+*[Insert screenshot of the PASSED GitHub Actions run here]*
+
+## 10. Conclusion
 
 Four black-box design techniques applied to a codebase that already had 52 passing unit
 tests and 95% coverage found five real defects, two of them critical. The techniques earned
