@@ -49,15 +49,13 @@ class RequestLeavePage:
 
     def enter_start_date(self, date_str: str):
         """Enter a start date (YYYY-MM-DD)."""
-        field = self.wait.until(EC.element_to_be_clickable(self.START_DATE_INPUT))
-        field.clear()
-        field.send_keys(date_str)
+        field = self.wait.until(EC.presence_of_element_located(self.START_DATE_INPUT))
+        self.driver.execute_script("arguments[0].value = arguments[1];", field, date_str)
         return self
 
     def enter_end_date(self, date_str: str):
-        field = self.wait.until(EC.element_to_be_clickable(self.END_DATE_INPUT))
-        field.clear()
-        field.send_keys(date_str)
+        field = self.wait.until(EC.presence_of_element_located(self.END_DATE_INPUT))
+        self.driver.execute_script("arguments[0].value = arguments[1];", field, date_str)
         return self
 
     def enter_reason(self, reason: str):
