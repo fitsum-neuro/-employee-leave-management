@@ -216,14 +216,14 @@ class TestLoginLogoutFlow:
         """SYS-01-02: Wrong password keeps user on login page."""
         lp = LoginPage(driver, BASE_URL).open()
         lp.login(EMPLOYEE_EMAIL, "wrong_password")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
         assert "/login" in driver.current_url or "Invalid" in driver.page_source
 
     def test_unknown_email_shows_error(self, driver):
         """SYS-01-03: Unknown email shows invalid-credentials message."""
         lp = LoginPage(driver, BASE_URL).open()
         lp.login("nobody@example.com", "anything")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
         assert "Invalid" in driver.page_source or "/login" in driver.current_url
 
     def test_logout_redirects_to_login(self, logged_in_employee):
@@ -259,10 +259,8 @@ class TestLeaveRequestWorkflow:
         rlp.fill_and_submit("Annual", FUTURE_START, FUTURE_END)
 
         # Should redirect to leave history on success
-        WebDriverWait(driver, 10).until(
-            lambda d: "/leave-history" in d.current_url
-                      or "submitted" in d.page_source.lower()
-                      or "Annual" in d.page_source
+        WebDriverWait(driver, 20).until(
+            lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0
         )
         assert "Annual" in driver.page_source
 
@@ -273,6 +271,7 @@ class TestLeaveRequestWorkflow:
         # Submit leave
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Personal", "2027-07-01", "2027-07-01", reason="Personal errand")
+        WebDriverWait(driver, 20).until(lambda d: "/leave-history" in d.current_url)
 
         # View history
         lhp = LeaveHistoryPage(driver, BASE_URL).open()
@@ -285,6 +284,7 @@ class TestLeaveRequestWorkflow:
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Sick", "2027-08-10", "2027-08-11",
                              reason="Flu", has_document=False)
+        WebDriverWait(driver, 20).until(lambda d: "/leave-history" in d.current_url)
 
         lhp = LeaveHistoryPage(driver, BASE_URL).open()
         assert lhp.has_request_with_status("Requested")
@@ -296,6 +296,7 @@ class TestLeaveRequestWorkflow:
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Sick", "2027-09-01", "2027-09-05",
                              reason="Surgery", has_document=True)
+        WebDriverWait(driver, 20).until(lambda d: "/leave-history" in d.current_url)
 
         lhp = LeaveHistoryPage(driver, BASE_URL).open()
         assert lhp.has_leave_type("Sick")
@@ -318,7 +319,7 @@ class TestAdminWorkflow:
 
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit(leave_type, start, end, reason, has_doc)
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         # Logout
         driver.get(BASE_URL + "/logout")
@@ -338,7 +339,7 @@ class TestAdminWorkflow:
         assert initial_count >= 1, "Expected at least one pending request"
 
         ap.approve_first_request()
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
         assert "approved" in driver.page_source.lower()
 
     def test_admin_can_reject_pending_request(self, driver):
@@ -353,7 +354,7 @@ class TestAdminWorkflow:
         assert ap.reject_button_count() >= 1
 
         ap.reject_first_request()
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
         assert "rejected" in driver.page_source.lower()
 
     def test_approved_status_visible_in_employee_history(self, driver):
@@ -367,7 +368,7 @@ class TestAdminWorkflow:
 
         ap = AdminPage(driver, BASE_URL).open()
         ap.approve_first_request()
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
         driver.get(BASE_URL + "/logout")
         WebDriverWait(driver, 20).until(EC.url_contains("/login"))
 
@@ -394,14 +395,14 @@ class TestCancellationFlow:
 
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Personal", "2027-06-10", "2027-06-10")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         lhp = LeaveHistoryPage(driver, BASE_URL).open()
         initial_count = lhp.row_count()
         assert initial_count >= 1
 
         lhp.cancel_first_request()
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         assert "Cancelled" in driver.page_source or "cancelled" in driver.page_source.lower()
 
@@ -411,12 +412,12 @@ class TestCancellationFlow:
 
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Annual", "2027-06-15", "2027-06-15")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         lhp = LeaveHistoryPage(driver, BASE_URL).open()
         before = lhp.cancel_buttons_count()
         lhp.cancel_first_request()
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         lhp2 = LeaveHistoryPage(driver, BASE_URL).open()
         after = lhp2.cancel_buttons_count()
@@ -438,7 +439,7 @@ class TestInvalidInputHandling:
         rlp = RequestLeavePage(driver, BASE_URL).open()
         # 35 days — exceeds the 30-day maximum
         rlp.fill_and_submit("Annual", "2027-06-01", "2027-07-05", reason="Long leave")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         assert "exceed" in driver.page_source.lower() or "30" in driver.page_source
 
@@ -448,7 +449,7 @@ class TestInvalidInputHandling:
 
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Annual", "2020-01-01", "2020-01-05")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         assert "past" in driver.page_source.lower() or "Invalid" in driver.page_source
 
@@ -459,7 +460,7 @@ class TestInvalidInputHandling:
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit("Sick", "2027-06-01", "2027-06-06",
                              reason="Flu", has_document=False)  # 6 days, no doc
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         assert "document" in driver.page_source.lower() or "supporting" in driver.page_source.lower()
 
@@ -470,6 +471,6 @@ class TestInvalidInputHandling:
         rlp = RequestLeavePage(driver, BASE_URL).open()
         # Personal balance is 5 days; request 6
         rlp.fill_and_submit("Personal", "2027-06-01", "2027-06-06")
-        time.sleep(0.5)
+        WebDriverWait(driver, 10).until(lambda d: "/leave-history" in d.current_url or len(d.find_elements(By.CSS_SELECTOR, ".alert")) > 0)
 
         assert "insufficient" in driver.page_source.lower() or "balance" in driver.page_source.lower()
