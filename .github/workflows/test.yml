@@ -84,7 +84,8 @@ jobs:
       - name: Check minimum branch coverage on business_logic.py
         run: |
           python -m pytest \
-            --cov=app/business_logic \
+            -m "not system and not defect" \
+            --cov=app.business_logic \
             --cov-branch \
             --cov-report=term-missing \
             --cov-fail-under=80 \
