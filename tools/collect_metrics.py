@@ -34,6 +34,8 @@ DEFECT_MODULE = {
     'DEF-003': 'app/business_logic.py',
     'DEF-004': 'app/business_logic.py',
     'DEF-005': 'app/models.py',
+    'DEF-006': 'app/routes.py',
+    'DEF-007': 'app/routes.py',
 }
 
 # Designed test cases per technique, from docs/test_design.md.

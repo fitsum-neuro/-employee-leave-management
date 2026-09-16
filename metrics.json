@@ -1,26 +1,26 @@
 {
   "project": "Employee Leave Management System",
-  "measured_on": "2026-09-15",
+  "measured_on": "2026-09-16",
   "measured_by": "Henok Zemedkun (ATE/8552/16) - Person 2, Test Architect",
   "generated_by": "tools/collect_metrics.py",
-  "defect_density": 10.0,
+  "defect_density": 13.38,
   "defect_removal_efficiency": 100.0,
-  "defects_found": 5,
+  "defects_found": 7,
   "defects_escaped": 0,
-  "coverage_percentage": 98.37,
+  "coverage_percentage": 95.43,
   "defect_density_detail": {
-    "value": 10.0,
+    "value": 13.38,
     "unit": "defects per 1000 lines of application code",
     "formula": "defects_found / (source_lines_of_code / 1000)",
-    "defects_found": 5,
-    "source_lines_of_code": 500,
+    "defects_found": 7,
+    "source_lines_of_code": 523,
     "loc_basis": "non-blank, non-comment Python lines under app/",
     "lines_per_file": {
       "app/__init__.py": 70,
       "app/auth.py": 33,
-      "app/business_logic.py": 91,
+      "app/business_logic.py": 96,
       "app/models.py": 194,
-      "app/routes.py": 112
+      "app/routes.py": 130
     }
   },
   "defect_removal_efficiency_detail": {
@@ -54,43 +54,45 @@
     }
   },
   "coverage_detail": {
-    "statement_coverage_percent": 98.37,
-    "branch_coverage_percent": 94.87,
-    "statements_total": 352,
-    "statements_covered": 349,
-    "branches_total": 78,
-    "branches_covered": 74,
+    "statement_coverage_percent": 95.43,
+    "branch_coverage_percent": 90.7,
+    "statements_total": 374,
+    "statements_covered": 361,
+    "branches_total": 86,
+    "branches_covered": 78,
     "partial_branches": 4,
     "core_module": {
       "file": "app/business_logic.py",
-      "statement_coverage_percent": 100.0,
-      "branch_coverage_percent": 100.0,
+      "statement_coverage_percent": 97.92,
+      "branch_coverage_percent": 96.88,
       "target_percent": 80.0,
       "meets_target": true
     },
     "per_file": {
       "app/__init__.py": 97.06,
       "app/auth.py": 92.5,
-      "app/business_logic.py": 100.0,
+      "app/business_logic.py": 97.92,
       "app/models.py": 98.55,
-      "app/routes.py": 99.22
+      "app/routes.py": 91.45
     }
   },
   "defects_by_severity": {
-    "Critical": 2,
+    "Critical": 4,
     "Low": 1,
-    "Medium": 2
+    "Medium": 1,
+    "The request stays 'Approved' indefinitely. 'Taken' is dead configuration: the state machine defines a transition the application never exercises, and reporting cannot distinguish taken from pending-future leave.": 1
   },
   "defects_by_priority": {
-    "High": 2,
+    "High": 4,
     "Low": 1,
     "Medium": 2
   },
   "defects_by_status": {
-    "Open": 5
+    "Closed": 6,
+    "Medium": 1
   },
   "defects_by_module": {
-    "app/routes.py": 2,
+    "app/routes.py": 4,
     "app/business_logic.py": 2,
     "app/models.py": 1
   },
@@ -102,21 +104,11 @@
     "state_transition": 41
   },
   "automated_tests": {
-    "total": 189,
-    "passed": 182,
-    "failed": 7,
-    "pass_rate_percent": 96.30,
-    "failing_are_defect_probes": true,
-    "note": "Counts include 21 integration tests (INT-01..INT-04) and 16 Selenium system tests (SYS-01..SYS-05) added by Person 3 (Eyob Kassaye). Run `pytest -m 'not defect'` to exclude the 7 defect reproducers.",
-    "breakdown_by_suite": {
-      "unit_business_logic": 52,
-      "unit_routes": 15,
-      "decision_table": 22,
-      "state_transition": 41,
-      "integration": 21,
-      "system_selenium": 16,
-      "defect_probes_unit": 5,
-      "defect_probes_integration": 2
-    }
+    "total": 192,
+    "passed": 192,
+    "failed": 0,
+    "pass_rate_percent": 100.0,
+    "failing_are_defect_probes": false,
+    "note": "The failing tests are the defect reproducers marked with the `defect` marker, one per logged defect. Run `pytest -m \"not defect\"` to exclude them."
   }
 }
