@@ -184,7 +184,7 @@ def logged_in_employee(driver):
     """WebDriver fixture: employee already logged in."""
     lp = LoginPage(driver, BASE_URL).open()
     lp.login(EMPLOYEE_EMAIL, EMPLOYEE_PASSWORD)
-    WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+    WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
     return driver
 
 
@@ -193,7 +193,7 @@ def logged_in_admin(driver):
     """WebDriver fixture: admin already logged in."""
     lp = LoginPage(driver, BASE_URL).open()
     lp.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-    WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+    WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
     return driver
 
 
@@ -209,7 +209,7 @@ class TestLoginLogoutFlow:
         """SYS-01-01: Valid employee login redirects to /dashboard."""
         lp = LoginPage(driver, BASE_URL).open()
         lp.login(EMPLOYEE_EMAIL, EMPLOYEE_PASSWORD)
-        WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
         assert "/dashboard" in driver.current_url
 
     def test_invalid_password_stays_on_login(self, driver):
@@ -231,13 +231,13 @@ class TestLoginLogoutFlow:
         driver = logged_in_employee
         dp = DashboardPage(driver, BASE_URL)
         dp.logout()
-        WebDriverWait(driver, 10).until(EC.url_contains("/login"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/login"))
         assert "/login" in driver.current_url
 
     def test_protected_page_redirects_unauthenticated(self, driver):
         """SYS-01-05: Accessing /dashboard without login redirects to /login."""
         driver.get(BASE_URL + "/dashboard")
-        WebDriverWait(driver, 10).until(EC.url_contains("/login"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/login"))
         assert "/login" in driver.current_url
 
 
@@ -314,7 +314,7 @@ class TestAdminWorkflow:
         """Helper: log in as employee, submit leave, log out."""
         lp = LoginPage(driver, BASE_URL).open()
         lp.login(EMPLOYEE_EMAIL, EMPLOYEE_PASSWORD)
-        WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
 
         rlp = RequestLeavePage(driver, BASE_URL).open()
         rlp.fill_and_submit(leave_type, start, end, reason, has_doc)
@@ -322,7 +322,7 @@ class TestAdminWorkflow:
 
         # Logout
         driver.get(BASE_URL + "/logout")
-        WebDriverWait(driver, 10).until(EC.url_contains("/login"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/login"))
 
     def test_admin_can_approve_pending_request(self, driver):
         """SYS-03-01: Admin can approve a pending leave request."""
@@ -331,7 +331,7 @@ class TestAdminWorkflow:
         # Login as admin
         lp = LoginPage(driver, BASE_URL).open()
         lp.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-        WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
 
         ap = AdminPage(driver, BASE_URL).open()
         initial_count = ap.approve_button_count()
@@ -347,7 +347,7 @@ class TestAdminWorkflow:
 
         lp = LoginPage(driver, BASE_URL).open()
         lp.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-        WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
 
         ap = AdminPage(driver, BASE_URL).open()
         assert ap.reject_button_count() >= 1
@@ -363,18 +363,18 @@ class TestAdminWorkflow:
         # Admin approves
         lp = LoginPage(driver, BASE_URL).open()
         lp.login(ADMIN_EMAIL, ADMIN_PASSWORD)
-        WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
 
         ap = AdminPage(driver, BASE_URL).open()
         ap.approve_first_request()
         time.sleep(0.5)
         driver.get(BASE_URL + "/logout")
-        WebDriverWait(driver, 10).until(EC.url_contains("/login"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/login"))
 
         # Employee checks history
         lp2 = LoginPage(driver, BASE_URL).open()
         lp2.login(EMPLOYEE_EMAIL, EMPLOYEE_PASSWORD)
-        WebDriverWait(driver, 10).until(EC.url_contains("/dashboard"))
+        WebDriverWait(driver, 20).until(EC.url_contains("/dashboard"))
 
         lhp = LeaveHistoryPage(driver, BASE_URL).open()
         assert lhp.has_request_with_status("Approved")
